@@ -20,7 +20,7 @@ Assumption:
 import numpy as np
 import pandas as pd
 
-from main import RecyclingPolicy, Shoe, recyclability_score
+from shoes.main import RecyclingPolicy, Shoe, recyclability_score
 
 # ---------------------------------------------------------------------------
 # Constants

@@ -6,7 +6,7 @@ Loads trained models and predicts the optimal lifecycle path and
 estimated resale value for a set of demonstration shoes.
 
 Usage:
-    python predict.py
+    PYTHONPATH=src python -m shoes.common.predict
 
     Requires model_classifier.pkl and model_regressor.pkl to exist.
     Run train.py first if they are missing.
@@ -21,8 +21,8 @@ import os
 import joblib
 import pandas as pd
 
-from data import BRAND_MULTIPLIERS, DEFAULT_POLICY, build_shoe_for_material
-from main import recyclability_score
+from shoes.common.data import DEFAULT_POLICY, build_shoe_for_material
+from shoes.main import recyclability_score
 
 CLASSIFIER_PATH = "model_classifier.pkl"
 REGRESSOR_PATH  = "model_regressor.pkl"
@@ -88,7 +88,7 @@ def load_models(
         if not os.path.exists(path):
             raise FileNotFoundError(
                 f"Model file '{path}' not found. "
-                "Run 'python train.py' first to train and save models."
+                "Run 'PYTHONPATH=src python -m shoes.common.train' first to train and save models."
             )
     return joblib.load(clf_path), joblib.load(reg_path)
 

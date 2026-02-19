@@ -11,7 +11,7 @@ Pipeline objects so predict.py can call pipeline.predict() directly on
 raw DataFrames without a separate preprocessing step.
 
 Usage:
-    python train.py
+    PYTHONPATH=src python -m shoes.common.train
 """
 
 import os
@@ -25,7 +25,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from data import generate_dataset
+from shoes.common.data import generate_dataset
 
 # ---------------------------------------------------------------------------
 # Feature configuration
