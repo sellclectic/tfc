@@ -6,7 +6,7 @@ Loads trained models and predicts the optimal lifecycle path and
 estimated resale value for a set of demonstration shoes.
 
 Usage:
-    PYTHONPATH=src python -m shoes.common.predict
+    python -m shoes.common.predict
 
     Requires model_classifier.pkl and model_regressor.pkl to exist.
     Run train.py first if they are missing.
@@ -21,6 +21,7 @@ import os
 import joblib
 import pandas as pd
 
+from shoes.common.co2 import co2_avoided_kg, materials_diverted_kg, shoe_co2e_kg
 from shoes.common.data import DEFAULT_POLICY, build_shoe_for_material
 from shoes.main import recyclability_score
 
@@ -37,35 +38,35 @@ DEMO_SHOES = [
         label="Premium sneaker (near-new)",
         category="sneaker", material="leather", brand_tier="premium",
         condition_score=0.92, age_months=8, original_price=280.0,
-        resale_market_demand=0.85,
+        resale_market_demand=0.85, size=10,
     ),
     # Clear repair: quality boot, mid condition, below resale threshold
     dict(
         label="Mid-tier boot (worn, repairable)",
         category="boot", material="mixed", brand_tier="mid",
         condition_score=0.52, age_months=36, original_price=160.0,
-        resale_market_demand=0.45,
+        resale_market_demand=0.45, size=11,
     ),
     # Edge case: good condition but weak demand — may tip to repair
     dict(
-        label="Fast-fashion sneaker (decent shape, low demand)",
+        label="Fast-fashion sneaker (low demand)",
         category="sneaker", material="synthetic", brand_tier="fast",
         condition_score=0.68, age_months=18, original_price=75.0,
-        resale_market_demand=0.22,
+        resale_market_demand=0.22, size=9,
     ),
     # Clear recycle: old sandal, very poor condition
     dict(
         label="Sandal (end of life)",
         category="sandal", material="synthetic", brand_tier="fast",
         condition_score=0.12, age_months=60, original_price=45.0,
-        resale_market_demand=0.10,
+        resale_market_demand=0.10, size=8,
     ),
     # Edge case: high-value, older premium boot still worth repairing
     dict(
         label="Premium boot (aged, still valuable)",
         category="boot", material="leather", brand_tier="premium",
         condition_score=0.58, age_months=48, original_price=420.0,
-        resale_market_demand=0.40,
+        resale_market_demand=0.40, size=12,
     ),
 ]
 
@@ -88,7 +89,7 @@ def load_models(
         if not os.path.exists(path):
             raise FileNotFoundError(
                 f"Model file '{path}' not found. "
-                "Run 'PYTHONPATH=src python -m shoes.common.train' first to train and save models."
+                "Run 'python -m shoes.common.train' first to train and save models."
             )
     return joblib.load(clf_path), joblib.load(reg_path)
 
@@ -144,6 +145,20 @@ def run_predictions(
     results["predicted_path"]  = predicted_paths
     results["predicted_value"] = predicted_values
 
+    # CO2 impact — computed from predicted path + shoe attributes
+    results["shoe_co2e_kg"] = [
+        shoe_co2e_kg(r["material"], r["category"], r["size"])
+        for _, r in results.iterrows()
+    ]
+    results["co2_avoided_kg"] = [
+        co2_avoided_kg(r["shoe_co2e_kg"], r["predicted_path"])
+        for _, r in results.iterrows()
+    ]
+    results["materials_diverted_kg"] = [
+        materials_diverted_kg(r["material"], r["category"], r["predicted_path"])
+        for _, r in results.iterrows()
+    ]
+
     return results
 
 
@@ -152,31 +167,34 @@ def run_predictions(
 # ---------------------------------------------------------------------------
 
 def format_output(results: pd.DataFrame) -> None:
-    header = (
-        f"\n{'=== Project S.H.O.E.S. — Lifecycle Path Predictor':=<70}\n"
-    )
+    col_w = {"label": 36, "path": 9, "value": 10, "co2": 13, "mat": 14}
+    total_w = 2 + col_w["label"] + 2 + col_w["path"] + 2 + col_w["value"] + 2 + col_w["co2"] + 2 + col_w["mat"]
+    sep = "-" * total_w
+
+    header = f"\n{'=== Project S.H.O.E.S. — Lifecycle Path Predictor':=<{total_w}}\n"
     print(header)
 
-    col_w = {"label": 38, "path": 9, "value": 12}
-    sep = "-" * 70
-
     print(
-        f"  {'Shoe':<{col_w['label']}}  {'Path':<{col_w['path']}}  {'Est. Resale':>{col_w['value']}}"
+        f"  {'Shoe':<{col_w['label']}}  {'Path':<{col_w['path']}}"
+        f"  {'Est. Resale':>{col_w['value']}}"
+        f"  {'CO2 Avoided':>{col_w['co2']}}"
+        f"  {'Mat. Diverted':>{col_w['mat']}}"
     )
     print(sep)
 
     for _, row in results.iterrows():
-        path  = row["predicted_path"].upper()
-        value = f"${row['predicted_value']:.2f}"
+        path    = row["predicted_path"].upper()
+        value   = f"${row['predicted_value']:.2f}"
+        co2     = f"{row['co2_avoided_kg']:.1f} kg CO2e"
+        mat     = f"{row['materials_diverted_kg']:.2f} kg"
         print(
-            f"  {row['label']:<{col_w['label']}}  {path:<{col_w['path']}}  {value:>{col_w['value']}}"
+            f"  {row['label']:<{col_w['label']}}  {path:<{col_w['path']}}"
+            f"  {value:>{col_w['value']}}"
+            f"  {co2:>{col_w['co2']}}"
+            f"  {mat:>{col_w['mat']}}"
         )
 
     print(sep)
-    print(
-        "\n  Note: estimated resale value shown for all shoes as a market\n"
-        "  reference. Near-zero values on RECYCLE predictions are expected.\n"
-    )
 
 
 # ---------------------------------------------------------------------------

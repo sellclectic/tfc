@@ -1,0 +1,14 @@
+README.md
+pyproject.toml
+src/shoes/__init__.py
+src/shoes/main.py
+src/shoes.egg-info/PKG-INFO
+src/shoes.egg-info/SOURCES.txt
+src/shoes.egg-info/dependency_links.txt
+src/shoes.egg-info/requires.txt
+src/shoes.egg-info/top_level.txt
+src/shoes/common/__init__.py
+src/shoes/common/co2.py
+src/shoes/common/data.py
+src/shoes/common/predict.py
+src/shoes/common/train.py
