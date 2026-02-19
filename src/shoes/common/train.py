@@ -19,6 +19,7 @@ import os
 import joblib
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+import numpy as np
 from sklearn.metrics import accuracy_score, f1_score, mean_squared_error
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
@@ -133,7 +134,7 @@ def evaluate_classifier(pipeline: Pipeline, X_test, y_test) -> dict:
 
 def evaluate_regressor(pipeline: Pipeline, X_test, y_test) -> dict:
     y_pred = pipeline.predict(X_test)
-    rmse = mean_squared_error(y_test, y_pred, squared=False)
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
     return {"rmse": rmse}
 
 
