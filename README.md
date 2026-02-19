@@ -9,7 +9,7 @@ Shoes are notoriously difficult to recycle due to multi-material construction. T
 ## Quickstart
 
 ```bash
-pip install -r requirements/requirements.txt
+python3 -m pip install -r requirements/requirements.txt
 
 # Optional: verify data generation and class distribution
 PYTHONPATH=src python -m shoes.common.data
