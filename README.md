@@ -1,4 +1,4 @@
-# Project S.H.O.E.S. — ML Prototype
+# Project S.H.O.E.S.
 
 A simplified machine learning prototype demonstrating the core prediction engine behind **Project S.H.O.E.S.**, an AI-powered platform designed to optimize the end-of-life journey of footwear. Given structured product attributes, the system predicts whether a shoe should be **resold**, **repaired**, or **recycled**, and estimates its current resale market value.
 
