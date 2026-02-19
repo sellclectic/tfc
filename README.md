@@ -9,16 +9,21 @@ Shoes are notoriously difficult to recycle due to multi-material construction. T
 ## Quickstart
 
 ```bash
-python3 -m pip install -r requirements/requirements.txt
+# Create and activate a virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install the package and all dependencies
+pip install -e .
 
 # Optional: verify data generation and class distribution
-PYTHONPATH=src python -m shoes.common.data
+python -m shoes.common.data
 
 # Train both models (~10–20 seconds)
-PYTHONPATH=src python -m shoes.common.train
+python -m shoes.common.train
 
 # Run the inference demo
-PYTHONPATH=src python -m shoes.common.predict
+python -m shoes.common.predict
 ```
 
 ---
@@ -37,6 +42,7 @@ tfc/
 │           └── predict.py        # Inference demo
 ├── requirements/
 │   └── requirements.txt
+├── pyproject.toml                # Package config — enables `pip install -e .`
 ├── model_classifier.pkl          # Trained classification pipeline (generated)
 └── model_regressor.pkl           # Trained regression pipeline (generated)
 ```

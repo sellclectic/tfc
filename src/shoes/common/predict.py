@@ -6,7 +6,7 @@ Loads trained models and predicts the optimal lifecycle path and
 estimated resale value for a set of demonstration shoes.
 
 Usage:
-    PYTHONPATH=src python -m shoes.common.predict
+    python -m shoes.common.predict
 
     Requires model_classifier.pkl and model_regressor.pkl to exist.
     Run train.py first if they are missing.
@@ -89,7 +89,7 @@ def load_models(
         if not os.path.exists(path):
             raise FileNotFoundError(
                 f"Model file '{path}' not found. "
-                "Run 'PYTHONPATH=src python -m shoes.common.train' first to train and save models."
+                "Run 'python -m shoes.common.train' first to train and save models."
             )
     return joblib.load(clf_path), joblib.load(reg_path)
 
@@ -195,12 +195,6 @@ def format_output(results: pd.DataFrame) -> None:
         )
 
     print(sep)
-    print(
-        "\n  CO2 avoided: kg CO2e saved vs. landfilling the shoe and buying a replacement.\n"
-        "  Resale displaces new manufacture almost entirely; recycle recovers only a fraction.\n"
-        "  Anchor: 14 kg CO2e lifecycle for a synthetic running shoe (Sarker et al. 2024).\n"
-        "  Mat. diverted: physical weight of material kept out of landfill.\n"
-    )
 
 
 # ---------------------------------------------------------------------------
