@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 
 from shoes.main import RecyclingPolicy, Shoe, recyclability_score
+from shoes.common.co2 import co2_avoided_kg, materials_diverted_kg, shoe_co2e_kg
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -77,8 +78,9 @@ def generate_dataset(n_samples: int = 7500, seed: int = SEED) -> pd.DataFrame:
     Returns a DataFrame with columns:
         category, material, brand_tier,
         condition_score, age_months, original_price,
-        resale_market_demand, recyclability_score,
-        optimal_path, resale_value
+        resale_market_demand, recyclability_score, size,
+        optimal_path, resale_value,
+        shoe_co2e_kg, co2_avoided_kg, materials_diverted_kg
 
     Label assignment (evaluated in priority order):
         resale  — condition_score > 0.60 AND resale_market_demand > 0.30
@@ -109,6 +111,7 @@ def generate_dataset(n_samples: int = 7500, seed: int = SEED) -> pd.DataFrame:
     age_months            = rng.integers(1, 121, size=n_samples)  # 1–120 inclusive
     original_prices       = rng.uniform(30.0, 500.0, size=n_samples)
     resale_market_demands = rng.uniform(0.0, 1.0, size=n_samples)
+    sizes                 = rng.integers(5, 14, size=n_samples)   # US men's 5–13 inclusive
 
     # --- recyclability_score via main.py bridge ---
     recyclability_scores = np.array(
@@ -133,6 +136,20 @@ def generate_dataset(n_samples: int = 7500, seed: int = SEED) -> pd.DataFrame:
         * brand_multipliers + noise
     ).clip(min=0.0)
 
+    # --- CO2 impact columns (rule-based, computed from labeled path + size) ---
+    shoe_co2e_values      = np.array([
+        shoe_co2e_kg(m, c, int(s))
+        for m, c, s in zip(materials, categories, sizes)
+    ])
+    co2_avoided_values    = np.array([
+        co2_avoided_kg(co2, path)
+        for co2, path in zip(shoe_co2e_values, optimal_paths)
+    ])
+    materials_diverted_values = np.array([
+        materials_diverted_kg(m, c, path)
+        for m, c, path in zip(materials, categories, optimal_paths)
+    ])
+
     return pd.DataFrame({
         "category":             categories,
         "material":             materials,
@@ -142,8 +159,12 @@ def generate_dataset(n_samples: int = 7500, seed: int = SEED) -> pd.DataFrame:
         "original_price":       original_prices,
         "resale_market_demand": resale_market_demands,
         "recyclability_score":  recyclability_scores,
+        "size":                 sizes,
         "optimal_path":         optimal_paths,
         "resale_value":         resale_values,
+        "shoe_co2e_kg":         shoe_co2e_values,
+        "co2_avoided_kg":       co2_avoided_values,
+        "materials_diverted_kg": materials_diverted_values,
     })
 
 
@@ -158,3 +179,6 @@ if __name__ == "__main__":
     print(f"\nClass distribution:\n{df['optimal_path'].value_counts()}")
     print(f"\nRecyclability scores by material:\n{df.groupby('material')['recyclability_score'].mean()}")
     print(f"\nResale value stats:\n{df['resale_value'].describe().round(2)}")
+    print(f"\nCO2e by material (mean kg):\n{df.groupby('material')['shoe_co2e_kg'].mean().round(2)}")
+    print(f"\nCO2 avoided by path (mean kg):\n{df.groupby('optimal_path')['co2_avoided_kg'].mean().round(2)}")
+    print(f"\nMaterials diverted by path (mean kg):\n{df.groupby('optimal_path')['materials_diverted_kg'].mean().round(3)}")

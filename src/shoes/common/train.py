@@ -11,7 +11,7 @@ Pipeline objects so predict.py can call pipeline.predict() directly on
 raw DataFrames without a separate preprocessing step.
 
 Usage:
-    PYTHONPATH=src python -m shoes.common.train
+    python -m shoes.common.train
 """
 
 import os
